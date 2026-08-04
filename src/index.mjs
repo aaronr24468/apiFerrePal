@@ -1,0 +1,46 @@
+import express from "express";
+import cors from 'cors';
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import { expressjwt } from "express-jwt";
+import {createServer} from 'http';
+import { config } from "dotenv";
+import { errorHandler } from "./middleware/errorHandler.mjs";
+config();
+
+import { router as authRouter } from "./routes/auth.mjs";
+import { router as creditRouter } from "./routes/credit.mjs";
+import { router as authentificationR } from "./routes/authentification.mjs";
+
+const port = process.env.PORT;
+
+const app = express();
+const server = createServer(app);
+
+app.use(morgan('dev'));
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}));
+app.use(cookieParser());
+app.use(express.json());
+
+app.use('/auth', authRouter);
+
+app.use('/authentification', expressjwt({secret: 'secret', algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), authentificationR)
+
+app.use('/credit', expressjwt({secret: 'secret', algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), creditRouter)
+
+app.use(errorHandler);
+
+app.use((err, req, res, next) =>{
+    if(err.name === "UnauthorizedError"){
+        req.status(500).json('unauthorized')
+    }else{
+        next()
+    }
+})
+
+server.listen(port, () =>{
+    console.log(`Listening to the http://localhost:${port}`)
+})
