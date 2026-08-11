@@ -19,7 +19,7 @@ const server = createServer(app);
 
 app.use(morgan('dev'));
 app.use(cors({
-    origin: 'https://ferrepalweb.onrender.com/',
+    origin: 'https://ferrepalweb.onrender.com',
     credentials: true
 }));
 app.use(cookieParser());
