@@ -51,7 +51,8 @@ export const LoginUser = async(req, res, next) =>{
         res.cookie('creditToken', token,{
             httpOnly: true,
             secure: true,
-            sameSite: "lax",
+            sameSite: "none",
+            partitioned: true
         })
 
         res.json({ok: true, message: 'Success Login'})
