@@ -30,7 +30,7 @@ export const logOut = (req, res, next) =>{
     try {
         res.clearCookie('creditToken',{
             secure: true,
-            sameSite: "lax"
+            sameSite: "none"
         })
         res.json({ok:true, message: 'success'})
     } catch (error) {
