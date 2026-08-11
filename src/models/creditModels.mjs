@@ -34,7 +34,7 @@ export const getInfoCustomer = async (id) => {
     c.description, 
     c.status,
     c.updated_at
-    FROM credit c LEFT JOIN  installment_History h on c.id = h.id_credit WHERE c.id_customer=? GROUP BY c.id`, [id]);
+    FROM credit c LEFT JOIN  installment_history h on c.id = h.id_credit WHERE c.id_customer=? GROUP BY c.id`, [id]);
 
     return ({ customer, credits })
 }
@@ -49,7 +49,7 @@ export const getInfoC = async (id) => {
     c.description, 
     c.status,
     c.updated_at
-    FROM credit c LEFT JOIN  installment_History h on c.id = h.id_credit WHERE c.id=? GROUP BY c.id`
+    FROM credit c LEFT JOIN  installment_history h on c.id = h.id_credit WHERE c.id=? GROUP BY c.id`
     const [data] = await connection.query(query, [id])
     return (data)
 }
@@ -86,7 +86,7 @@ export const editCreditCustomer = async (amount, description, id) => {
 }
 
 export const installmentCreditCustomer = async (id_credit, id_customer, amount, status) => {
-    const query = `INSERT INTO installment_History(
+    const query = `INSERT INTO installment_history(
     id_credit, 
     id_customer,
     installment_amount,
@@ -103,7 +103,7 @@ export const payoutCreditCustomerStatus = async (id_credit) => {
 }
 
 export const getHistoryInstallments = async(id_credit, id_customer) =>{
-    const query =  'SELECT * FROM installment_History WHERE id_credit=? AND id_customer=?';
+    const query =  'SELECT * FROM installment_history WHERE id_credit=? AND id_customer=?';
     const [data] = await connection.query(query, [id_credit, id_customer])
     return(data)
 }
