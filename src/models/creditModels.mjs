@@ -62,7 +62,7 @@ export const editCreditCustomer = async (amount, description, id) => {
 
         await connect.beginTransaction();
 
-        const query = `INSERT INTO update_Credit(id_credit, amount, description_update)values(?,?,?)`;
+        const query = `INSERT INTO update_credit(id_credit, amount, description_update)values(?,?,?)`;
         const [responseInsert] = await connect.query(query, [id, amount, description])
 
         const query2 = `UPDATE credit SET amount=amount+?, description=? WHERE id=?`;
