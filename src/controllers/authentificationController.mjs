@@ -29,8 +29,10 @@ export const infoUser = async(req, res, next) =>{
 export const logOut = (req, res, next) =>{
     try {
         res.clearCookie('creditToken',{
+            httpOnly: true,
             secure: true,
-            sameSite: "none"
+            sameSite: "none",
+            partitioned: true
         })
         res.json({ok:true, message: 'success'})
     } catch (error) {
