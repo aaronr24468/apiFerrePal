@@ -2,6 +2,8 @@ import { getUserValidation, registerU } from '../models/authModels.mjs';
 import {AppError} from '../services/appError.mjs';
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { config } from 'dotenv';
+config();
 
 const saltRounds = 10;
 
@@ -44,7 +46,7 @@ export const LoginUser = async(req, res, next) =>{
 
         const payload = validUser[0];
 
-        const token = jwt.sign(payload, 'secret',{
+        const token = jwt.sign(payload, `${process.env.SECRETJWT}`,{
             expiresIn: "1d"
         });
 

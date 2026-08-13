@@ -27,15 +27,15 @@ app.use(express.json());
 
 app.use('/auth', authRouter);
 
-app.use('/authentification', expressjwt({secret: 'secret', algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), authentificationR)
+app.use('/authentification', expressjwt({secret: `${process.env.SECRETJWT}`, algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), authentificationR)
 
-app.use('/credit', expressjwt({secret: 'secret', algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), creditRouter)
+app.use('/credit', expressjwt({secret: `${process.env.SECRETJWT}`, algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), creditRouter)
 
 app.use(errorHandler);
 
 app.use((err, req, res, next) =>{
     if(err.name === "UnauthorizedError"){
-        req.status(500).json('unauthorized')
+        res.status(401).json('unauthorized')
     }else{
         next()
     }
