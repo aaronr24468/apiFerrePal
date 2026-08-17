@@ -7,7 +7,7 @@ export const registerU = async(username, password, rol) =>{
 }
 
 export const getUserValidation = async(data) =>{
-    const query = 'SELECT id, rol, password from users WHERE username=?';
+    const query = 'SELECT id, rol, password, username from users WHERE username=?';
     const [user] = await connection.query(query, [data.username])
     return(user);
 }
