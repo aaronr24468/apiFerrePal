@@ -36,13 +36,16 @@ export const LoginUser = async(req, res, next) =>{
 
         const validUser = await getUserValidation(data)
 
-        if(validUser.length === 0 || validUser[0].usermane != data.username) throw new AppError('Usuario no Encontrado', 403);
+        if(validUser.length === 0 ) throw new AppError('Usuario no Encontrado', 403);
+
+        if(data.username !== validUser[0].username) throw new AppError('Usuario no valido', 405)
 
         const checkPassword = await bcrypt.compare(data.password, validUser[0].password)
 
         if(!checkPassword) throw new AppError('Contraseña no coincide', 405)
 
         delete validUser[0].password;
+        delete validUser[0].username;
 
         const payload = validUser[0];
 
