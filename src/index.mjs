@@ -11,6 +11,7 @@ config();
 import { router as authRouter } from "./routes/auth.mjs";
 import { router as creditRouter } from "./routes/credit.mjs";
 import { router as authentificationR } from "./routes/authentification.mjs";
+import { router as productsRouter } from "./routes/products_store.mjs";
 
 const port = process.env.PORT;
 
@@ -19,7 +20,8 @@ const server = createServer(app);
 
 app.use(morgan('dev'));
 app.use(cors({
-    origin: 'https://ferrepalweb.onrender.com',
+    origin: 'http://localhost:5173',
+    // origin: 'https://ferrepalweb.onrender.com',
     credentials: true
 }));
 app.use(cookieParser());
@@ -30,6 +32,8 @@ app.use('/auth', authRouter);
 app.use('/authentification', expressjwt({secret: `${process.env.SECRETJWT}`, algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), authentificationR)
 
 app.use('/credit', expressjwt({secret: `${process.env.SECRETJWT}`, algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), creditRouter)
+
+app.use('/products', expressjwt({secret: `${process.env.SECRETJWT}`, algorithms: ['HS256'], getToken: (req) => req.cookies.creditToken}), productsRouter)
 
 app.use(errorHandler);
 
