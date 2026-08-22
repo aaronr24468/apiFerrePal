@@ -32,7 +32,7 @@ export const logOut = (req, res, next) =>{
             httpOnly: true,
             secure: true,
             sameSite: "none",
-            partitioned: false
+            partitioned: true
         })
         res.json({ok:true, message: 'success'})
     } catch (error) {
