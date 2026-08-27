@@ -1,4 +1,4 @@
-import { editCreditCustomer, getHistoryInstallments, getInfoC, getInfoCustomer, getListC, installmentCreditCustomer, newCredit, newCustomer, payoutCreditCustomerStatus } from "../models/creditModels.mjs";
+import { editCreditCustomer, getHistoryInstallments, getInfoC, getInfoCustomer, getListC, getListProductCredit, installmentCreditCustomer, newCredit, newCustomer, payoutCreditCustomerStatus } from "../models/creditModels.mjs";
 import {AppError} from '../services/appError.mjs';
 
 
@@ -22,16 +22,15 @@ export const newCustomerC = async(req, res, next) =>{
 
 export const newCreditC = async(req, res, next) =>{
     try {
-        const {id_customer, amountCredit, descriptionData} = req.body;
+        const {id_customer, listSelected, totalCredit} = req.body;
 
-        if(!amountCredit.length || !descriptionData.length) throw new AppError('Falta Informacion para el credito', 403)
+        console.log(listSelected, totalCredit)
 
-
-        const answer = await newCredit(id_customer, amountCredit, descriptionData);
+        const answer = await newCredit(id_customer, listSelected, totalCredit);
 
         //acomodar que tenemos que mandar el due_date (fecha limite para el credito) en mysql y mandarlo desde el front
 
-        if(!answer) throw new AppError("No se pudo crear el registro del credito", 403);
+        if(!answer) throw new AppError("Parece que ocurrio un error al registrar el credito", 403);
 
         res.json({ok: true, message: 'success'});
     } catch (error) {
@@ -64,8 +63,13 @@ export const getInfoCredit = async(req, res, next) =>{
     try {
         const id = req.params.id;
         const data = await getInfoC(id);
+        const products = await getListProductCredit(id)//obtenemos la informacion de los productos 
+        products.forEach((element) =>{ //ciclamos para separar el texto en array para cada imagen y seleccionamos solo el index 0
+            const arrImages = element.images.split(',')
+            element.image = arrImages[0]
+        })
         const credit = data[0]
-        res.json({ok: true, message: 'Success', info: credit})
+        res.json({ok: true, message: 'Success', info: credit, listP: products})
     } catch (error) {
         next(error)
     }
@@ -92,9 +96,11 @@ export const installmentCredit = async(req, res, next) =>{
 
         if(!numberInput) throw new AppError('La cantidad no es numerico', 408)
 
-        const credit = await getInfoC(id_credit)
+        const creditData = await getInfoC(id_credit)
 
-        const total_debt = Number(credit[0].amount) - Number(credit[0].Installment);
+        const credit = creditData[0]
+
+        const total_debt = Number(credit.amount) - Number(credit.Installment);
 
         if(Number(amount) > total_debt || (total_debt - Number(amount)) === 0) throw new AppError('No puedes abonar mas de lo que se debe o liquidar', 405)
 
@@ -112,8 +118,10 @@ export const installmentCredit = async(req, res, next) =>{
 export const payoutCredit = async(req, res, next) =>{
     try {
         const{id_credit, id_customer} = req.body;
-        const credit = await getInfoC(id_credit)
-        const total_amount = Number(credit[0].amount) - Number(credit[0].Installment);
+        const creditData = await getInfoC(id_credit);
+        const credit = creditData[0]
+        const total_amount = Number(credit.amount) - Number(credit.Installment);
+        console.log(total_amount)
         const answer = await installmentCreditCustomer(id_credit, id_customer, total_amount, 'Liquidado');
         if(!answer) throw new AppError('Error al liquidar cuenta', 403);
         console.log(id_credit)

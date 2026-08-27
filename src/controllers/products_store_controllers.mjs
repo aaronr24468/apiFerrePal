@@ -85,3 +85,20 @@ export const setImagesCloudinary = async (req, res, next) => {
 
     }
 }
+
+export const getPriceCredit = async(req, res, next) =>{
+    try {   
+        const data = req.body;
+        let total = 0.00;
+        data.list.forEach((item) =>{
+            if(item.unidad_medida === "pieza"){
+                total = total + (Number(item.precio) * Number(item.quantity))
+            }else{
+                total = total + (Number(item.precio) * Number(item.kg))
+            }
+        })
+        res.json({ok: true, message: 'success', amount: total});
+    } catch (error) {
+        next(error)
+    }
+}

@@ -6,10 +6,36 @@ export const newCustomer = async (full_name, phone_Number, address) => {
     return (answer.affectedRows === 1);
 }
 
-export const newCredit = async (id_customer, amount, description) => {
-    const query = 'INSERT INTO credit(id_customer, amount, description) values(?,?,?)';
-    const [answer] = await connection.query(query, [id_customer, amount, description])
-    return (answer.affectedRows === 1);
+export const newCredit = async (id_customer, listSelected, totalCredit) => {
+    const connect = await connection.getConnection();
+    try {
+        await connect.beginTransaction();
+
+        const query = `INSERT INTO credit(id_customer)values(?)`
+        const [answer] = await connect.query(query, [id_customer]);
+
+        const id_credit = answer.insertId;
+        const affectedR = answer.affectedRows;
+
+        if (affectedR !== 1) {
+            await connect.rollback();
+            return (false)
+        }
+
+        for (const element of listSelected) {
+            const query = `INSERT INTO credit_products(id_credit, id_product, quantity) values(?,?,?)`
+            const [answerProduct] = await connect.query(query, [id_credit, element.id_product, element.quantity])
+        };
+
+        await connect.commit();
+        return (true)
+
+    } catch (error) {
+        await connect.rollback();
+        throw error
+    } finally {
+        connect.release();
+    }
 }
 
 export const getListC = async () => {
@@ -29,12 +55,28 @@ export const getInfoCustomer = async (id) => {
     c.id,
     c.id_customer,
     c.create_at, 
-    c.amount, 
-    coalesce(sum(h.installment_amount), 0, 2) as Installment, 
-    c.description, 
     c.status,
-    c.updated_at
-    FROM credit c LEFT JOIN  installment_history h on c.id = h.id_credit WHERE c.id_customer=? GROUP BY c.id`, [id]);
+    c.updated_at,
+    prod.total_amount AS amount,
+    COALESCE(inst.total_installment, 0) AS Installment
+FROM credit c 
+-- Subconsulta para calcular el monto total de productos por crédito
+LEFT JOIN (
+    SELECT 
+    cp.id_credit, 
+    SUM(pd.precio * cp.quantity) AS total_amount,
+    GROUP_CONCAT(CONCAT(pd.nombre) SEPARATOR ",") AS list_products
+    FROM credit_products cp
+    INNER JOIN products pd ON cp.id_product = pd.id
+    GROUP BY cp.id_credit
+) prod ON c.id = prod.id_credit
+-- Subconsulta para calcular el total abonado por crédito
+LEFT JOIN (
+    SELECT id_credit, SUM(installment_amount) AS total_installment
+    FROM installment_history
+    GROUP BY id_credit
+) inst ON c.id = inst.id_credit
+WHERE c.id_customer = ?`, [id]);
 
     return ({ customer, credits })
 }
@@ -44,12 +86,27 @@ export const getInfoC = async (id) => {
     c.id,
     c.id_customer,
     c.create_at, 
-    c.amount, 
-    coalesce(sum(h.installment_amount), 0, 2) as Installment, 
-    c.description, 
+    prod.total_amount as amount,
+    COALESCE(inst.total_installment, 0) AS Installment,
+    prod.list_products,
     c.status,
     c.updated_at
-    FROM credit c LEFT JOIN  installment_history h on c.id = h.id_credit WHERE c.id=? GROUP BY c.id`
+    FROM credit c 
+	LEFT JOIN(
+		SELECT 
+        cp.id_credit,
+        SUM(precio * quantity) as total_amount,
+        GROUP_CONCAT(CONCAT(pd.nombre, "-- (", cp.quantity," ", pd.unidad_medida,")") SEPARATOR ",") AS list_products
+        FROM credit_products as cp
+        INNER JOIN products as pd on cp.id_product = pd.id
+        GROUP BY cp.id_credit
+    ) prod on c.id = prod.id_credit
+    LEFT JOIN (
+		SELECT id_credit, SUM(installment_amount) as total_installment
+        FROM installment_history as ih
+        GROUP BY id_credit
+    ) inst ON c.id = inst.id_credit
+    WHERE c.id=?`
     const [data] = await connection.query(query, [id])
     return (data)
 }
@@ -58,7 +115,7 @@ export const editCreditCustomer = async (amount, description, id) => {
 
     const connect = await connection.getConnection();
 
-    try {    
+    try {
 
         await connect.beginTransaction();
 
@@ -79,7 +136,7 @@ export const editCreditCustomer = async (amount, description, id) => {
     } catch (error) {
         await connect.rollback();
         throw error
-    }finally{
+    } finally {
         connect.release();
     }
 
@@ -102,8 +159,30 @@ export const payoutCreditCustomerStatus = async (id_credit) => {
     return (answer.affectedRows === 1)
 }
 
-export const getHistoryInstallments = async(id_credit, id_customer) =>{
-    const query =  'SELECT * FROM installment_history WHERE id_credit=? AND id_customer=?';
+export const getHistoryInstallments = async (id_credit, id_customer) => {
+    const query = 'SELECT * FROM installment_history WHERE id_credit=? AND id_customer=?';
     const [data] = await connection.query(query, [id_credit, id_customer])
-    return(data)
+    return (data)
+}
+
+export const getListProductCredit = async(id) =>{
+    const query2 = `SELECT 
+    cp.id,
+    cp.id_product,
+    pd.nombre,
+    pd.codigo_barras,
+    cp.quantity,
+    cp.quantity as kg,
+    pd.unidad_medida,
+    pd.precio,
+    pd.marca,
+    group_concat(ip.url separator ", ") as images
+    from credit_products as cp
+    LEFT JOIN products as pd on cp.id_product = pd.id
+    LEFT JOIN images_products as ip on pd.id = ip.id_product
+    where cp.id_credit=?
+    group by cp.id;`
+    const [info_credit] = await connection.query(query2, [id]) 
+
+    return(info_credit)
 }
