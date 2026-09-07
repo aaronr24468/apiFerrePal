@@ -9,6 +9,8 @@ export const getAllProducts = async () => {
         p.precio,
         p.stock,
         p.unidad_medida,
+        p.categoria_ferreteria,
+        p.descripcion,
         group_concat(i.url separator ', ') as images
         from products AS p LEFT JOIN images_products as i on p.id = i.id_product GROUP BY p.id`;
     const [data] = await connection.query(query)

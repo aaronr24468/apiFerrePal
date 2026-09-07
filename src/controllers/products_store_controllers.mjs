@@ -10,7 +10,7 @@ export const getListProducts = async (req, res, next) => {
         products.forEach((element) =>{
             if(element.images.length > 0){
                 const arrImages = element.images.split(',')
-                element.images = arrImages
+                element.images = arrImages[0]
             }
             
         })
@@ -90,12 +90,8 @@ export const getPriceCredit = async(req, res, next) =>{
     try {   
         const data = req.body;
         let total = 0.00;
-        data.list.forEach((item) =>{
-            if(item.unidad_medida === "pieza"){
-                total = total + (Number(item.precio) * Number(item.quantity))
-            }else{
-                total = total + (Number(item.precio) * Number(item.kg))
-            }
+        data.list.forEach((item) =>{ 
+            total = total + (Number(item.precio) * Number(item.quantity))
         })
         res.json({ok: true, message: 'success', amount: total});
     } catch (error) {

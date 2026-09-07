@@ -89,12 +89,13 @@ export const getInfoC = async (id) => {
     prod.total_amount as amount,
     COALESCE(inst.total_installment, 0) AS Installment,
     prod.list_products,
+    prod.id_credit,
     c.status,
     c.updated_at
     FROM credit c 
 	LEFT JOIN(
 		SELECT 
-        cp.id_credit,
+        cp.id_credit as id_credit,
         SUM(precio * quantity) as total_amount,
         GROUP_CONCAT(CONCAT(pd.nombre, "-- (", cp.quantity," ", pd.unidad_medida,")") SEPARATOR ",") AS list_products
         FROM credit_products as cp
@@ -111,35 +112,16 @@ export const getInfoC = async (id) => {
     return (data)
 }
 
-export const editCreditCustomer = async (amount, description, id) => {
+export const updateCreditQuantity = async (connect, id, data) => {
+    const query = `UPDATE credit_products SET quantity=? WHERE id=?`
+    const [info] = await connect.query(query, [data.quantity, data.id])
+    return(info.affectedRows === 1)
+}
 
-    const connect = await connection.getConnection();
-
-    try {
-
-        await connect.beginTransaction();
-
-        const query = `INSERT INTO update_credit(id_credit, amount, description_update)values(?,?,?)`;
-        const [responseInsert] = await connect.query(query, [id, amount, description])
-
-        const query2 = `UPDATE credit SET amount=amount+?, description=? WHERE id=?`;
-        const [response] = await connect.query(query2, [amount, description, id])
-
-        if (responseInsert.affectedRows === 1 && response.affectedRows === 1) {
-            await connect.commit();
-            return true
-        } else {
-            await connect.rollback();
-            return false
-        }
-
-    } catch (error) {
-        await connect.rollback();
-        throw error
-    } finally {
-        connect.release();
-    }
-
+export const insertCreditProductsEdit = async(connect, id, data) =>{
+    const query = `INSERT INTO credit_products(id_credit, id_product, quantity) values(?,?,?)`;
+    const [info] = await connect.query(query, [id, data.id_product, data.quantity])
+    return(info.affectedRows === 1)
 }
 
 export const installmentCreditCustomer = async (id_credit, id_customer, amount, status) => {
@@ -165,10 +147,11 @@ export const getHistoryInstallments = async (id_credit, id_customer) => {
     return (data)
 }
 
-export const getListProductCredit = async(id) =>{
+export const getListProductCredit = async (id) => {
     const query2 = `SELECT 
     cp.id,
     cp.id_product,
+    cp.id_credit,
     pd.nombre,
     pd.codigo_barras,
     cp.quantity,
@@ -182,7 +165,7 @@ export const getListProductCredit = async(id) =>{
     LEFT JOIN images_products as ip on pd.id = ip.id_product
     where cp.id_credit=?
     group by cp.id;`
-    const [info_credit] = await connection.query(query2, [id]) 
+    const [info_credit] = await connection.query(query2, [id])
 
-    return(info_credit)
+    return (info_credit)
 }

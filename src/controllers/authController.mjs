@@ -57,7 +57,7 @@ export const LoginUser = async(req, res, next) =>{
             httpOnly: true,
             secure: true,
             sameSite: "none",
-            partitioned: true
+            partitioned: false
         })
 
         res.json({ok: true, message: 'Success Login'})
