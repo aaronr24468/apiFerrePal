@@ -57,3 +57,33 @@ export const upload_Image_product = async (data) => {
     const [info] = await connection.query(query, [data.id, data.url]);
     return (info.affectedRows > 0)
 }
+
+export const editProductD = async (id, data) => {
+    const query = `
+    UPDATE products 
+    SET nombre=?, 
+    codigo_barras=?,
+    categoria_ferreteria=?,
+    marca=?,
+    precio=?,
+    unidad_medida=?,
+    stock=?,
+    descripcion=?
+    WHERE id=?
+    `;
+
+    const [result] = await connection.query(query, [
+        data.nombre,
+        data.codigo_barras,
+        data.categoria_ferreteria,
+        data.marca,
+        data.precio,
+        data.unidad_medida,
+        data.stock,
+        data.descripcion,
+        data.id
+    ]);
+
+    return(result.affectedRows === 1);
+
+}

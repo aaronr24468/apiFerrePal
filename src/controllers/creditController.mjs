@@ -32,6 +32,8 @@ export const newCreditC = async (req, res, next) => {
 
         //console.log(listSelected, totalCredit)
 
+        if(listSelected.length === 0) throw new AppError('Necesitas seleccionar algun producto', 405)
+
         const answer = await newCredit(id_customer, listSelected, totalCredit);
 
         //acomodar que tenemos que mandar el due_date (fecha limite para el credito) en mysql y mandarlo desde el front

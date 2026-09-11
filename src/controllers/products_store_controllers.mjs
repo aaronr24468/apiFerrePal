@@ -1,4 +1,4 @@
-import { getAllProducts, insert_New_Product, upload_Image_product } from "../models/products_store_models.mjs"
+import { editProductD, getAllProducts, insert_New_Product, upload_Image_product } from "../models/products_store_models.mjs"
 import { AppError } from "../services/appError.mjs"
 import cloudnary from '../services/cloudnary.mjs'
 
@@ -25,8 +25,8 @@ export const upload_Product = async (req, res, next) => {
     try {
         const data = {
             codigo_barras: req.body.codigo_barras,
-            sku: req.body.sku,
-            nombre: req.body.nombre,
+            sku: req.body.sku || '',
+            nombre: req.body.name,
             descripcion: req.body.descripcion,
             categoria: req.body.categoria,
             categoria_ferreteria: req.body.categoria_ferreteria,
@@ -98,3 +98,20 @@ export const getPriceCredit = async(req, res, next) =>{
         next(error)
     }
 }
+
+export const editProductData = async(req, res, next) =>{
+    try {
+
+        const id = req.params.id;
+        const data = req.body;
+        
+        const answer = await editProductD(id, data)
+
+        if(!answer) throw new AppError('Error al guardar datos intentar mas tarde', 403);
+
+        res.json({ok: true, message: 'Success'})
+    } catch (error) {
+        next(error)
+    }
+}
+
