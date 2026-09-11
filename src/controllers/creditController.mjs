@@ -1,4 +1,4 @@
-import { updateCreditQuantity, insertCreditProductsEdit, getHistoryInstallments, getInfoC, getInfoCustomer, getListC, getListProductCredit, installmentCreditCustomer, newCredit, newCustomer, payoutCreditCustomerStatus } from "../models/creditModels.mjs";
+import { insertCreditProductsEdit, getHistoryInstallments, getInfoC, getInfoCustomer, getListC, getListProductCredit, installmentCreditCustomer, newCredit, newCustomer, payoutCreditCustomerStatus, updateCreditAmount } from "../models/creditModels.mjs";
 import { AppError } from '../services/appError.mjs';
 import { connection } from "../services/mysqlConnection.mjs";
 
@@ -88,28 +88,24 @@ export const editCredit = async (req, res, next) => {
     const connect = await connection.getConnection();
 
     try {
-        const { id, productsCreditEdit } = req.body
+        const { id, productsCreditEdit, newTotal } = req.body
 
-        const dataC = await getListProductCredit(id);
+        //const dataC = await getListProductCredit(id);
 
-        const idsSet = new Set(dataC.map(obj => obj.id_product))
+        // const idsSet = new Set(dataC.map(obj => obj.id_product))
 
-        const existList = productsCreditEdit.filter(obj => idsSet.has(obj.id_product))
+        // const existList = productsCreditEdit.filter(obj => idsSet.has(obj.id_product))
 
-        const noExist = productsCreditEdit.filter(obj => !idsSet.has(obj.id_product))
+        // const noExist = productsCreditEdit.filter(obj => !idsSet.has(obj.id_product))
 
         await connect.beginTransaction();
 
 
-        if (existList.length > 0) {
-            for (const exist of existList) {
-                const answer = await updateCreditQuantity(connect, id, exist);
-            }
-        }
+        const answer = await updateCreditAmount(connect, id, newTotal);
 
-        if (noExist.length > 0) {
-            for (const noE of noExist) {
-                const answer = await insertCreditProductsEdit(connect, id, noE)
+        if (productsCreditEdit.length > 0 && answer) {
+            for (const dataC of productsCreditEdit) {
+                const answer = await insertCreditProductsEdit(connect, id, dataC)
             }
         }
 

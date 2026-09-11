@@ -11,8 +11,8 @@ export const newCredit = async (id_customer, listSelected, totalCredit) => {
     try {
         await connect.beginTransaction();
 
-        const query = `INSERT INTO credit(id_customer)values(?)`
-        const [answer] = await connect.query(query, [id_customer]);
+        const query = `INSERT INTO credit(id_customer, total_credit)values(?,?)`
+        const [answer] = await connect.query(query, [id_customer, totalCredit]);
 
         const id_credit = answer.insertId;
         const affectedR = answer.affectedRows;
@@ -54,6 +54,7 @@ export const getInfoCustomer = async (id) => {
     const [credits] = await connection.query(`SELECT 
     c.id,
     c.id_customer,
+    c.total_credit,
     c.create_at, 
     c.status,
     c.updated_at,
@@ -85,6 +86,7 @@ export const getInfoC = async (id) => {
     const query = `SELECT 
     c.id,
     c.id_customer,
+    c.total_credit,
     c.create_at, 
     prod.total_amount as amount,
     COALESCE(inst.total_installment, 0) AS Installment,
@@ -112,9 +114,9 @@ export const getInfoC = async (id) => {
     return (data)
 }
 
-export const updateCreditQuantity = async (connect, id, data) => {
-    const query = `UPDATE credit_products SET quantity=? WHERE id=?`
-    const [info] = await connect.query(query, [data.quantity, data.id])
+export const updateCreditAmount = async (connect, id, newTotal) => {
+    const query = `UPDATE credit SET total_credit=? WHERE id=?`
+    const [info] = await connect.query(query, [newTotal, id])
     return(info.affectedRows === 1)
 }
 
