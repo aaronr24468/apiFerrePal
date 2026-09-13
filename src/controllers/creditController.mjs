@@ -154,7 +154,7 @@ export const payoutCredit = async (req, res, next) => {
         const { id_credit, id_customer } = req.body;
         const creditData = await getInfoC(id_credit);
         const credit = creditData[0]
-        const total_amount = Number(credit.amount) - Number(credit.Installment);
+        const total_amount = Number(credit.total_credit) - Number(credit.Installment);
         //console.log(total_amount)
         const answer = await installmentCreditCustomer(id_credit, id_customer, total_amount, 'Liquidado');
         if (!answer) throw new AppError('Error al liquidar cuenta', 403);

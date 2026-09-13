@@ -1,4 +1,4 @@
-import { editProductD, getAllProducts, insert_New_Product, upload_Image_product } from "../models/products_store_models.mjs"
+import { editProductD, getAllProducts, getProductsCategory, insert_New_Product, upload_Image_product } from "../models/products_store_models.mjs"
 import { AppError } from "../services/appError.mjs"
 import cloudnary from '../services/cloudnary.mjs'
 
@@ -110,6 +110,21 @@ export const editProductData = async(req, res, next) =>{
         if(!answer) throw new AppError('Error al guardar datos intentar mas tarde', 403);
 
         res.json({ok: true, message: 'Success'})
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const getProductByCategory = async(req, res, next) =>{
+    try {
+        const category = req.params.category;
+        console.log(category)
+        const products = await getProductsCategory(category)
+        products.forEach((element) =>{
+            const url = element.images.split(',')[0]
+            element.images = url
+        })
+        res.json({ok: true, message: 'Success', products: products})
     } catch (error) {
         next(error)
     }

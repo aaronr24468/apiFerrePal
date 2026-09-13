@@ -84,6 +84,27 @@ export const editProductD = async (id, data) => {
         data.id
     ]);
 
-    return(result.affectedRows === 1);
+    return (result.affectedRows === 1);
 
+}
+
+export const getProductsCategory = async (category) => {
+    const query = `SELECT 
+    p.id,
+    p.codigo_barras,
+    p.nombre,
+    p.marca,
+    p.precio,
+    p.stock,
+    p.unidad_medida,
+    p.categoria_ferreteria,
+    p.descripcion,
+    group_concat(ip.url separator ', ') as images
+    FROM products as p
+    LEFT JOIN images_products as ip 
+    on p.id = ip.id_product
+    WHERE categoria_ferreteria=?  GROUP BY p.id; 
+    `;
+    const [products] = await connection.query(query, [category])
+    return (products);
 }
